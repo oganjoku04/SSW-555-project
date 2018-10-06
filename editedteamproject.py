@@ -1,5 +1,5 @@
 """
-Program by Ogadinma Njoku
+Program edited by Ogadinma Njoku
 Being a contribution to the group project.
 Use: Analyze gedcom files, takes a file as input
 """
