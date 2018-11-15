@@ -1,0 +1,104 @@
+def list_all_ophans(individuals, families):
+    """ US33 - List of all Ophans in a Family with  unique ID both parents are deceaseed"""
+    error_type = "US33"
+    return_flag = True
+
+    for individual in individuals:
+        ophans = []
+        # Some ophans parents died immediately after birth
+        # This could be natural death or complicationa during birth
+        # Check if the ophan.famc has any before going forward
+        if len(individual.famc) > 0:
+            father = None
+            father_id = None
+            mother = None
+            mother_id = None
+            ophan_id = None
+            fam =  None
+
+            # Get the  family ID of an individuals
+            for family in families:
+                if family.uid == individual.famc[0]:
+                    father_id = family.husband
+                    mother_id = family.wife
+                    ophan_id = family.ophan
+                    fam = family
+                    break
+
+            # Get all the family including (deceased) UID
+            for individual in individuals:
+                if individual.uid == father.id:
+                    father = individual
+                if mother.uid == mother.id:
+                    mother = individual
+                if ophan.uid == ophan.id:
+                    ophan = individual
+                    ophan.append(individual)
+                # Situation where bothrer parents are dead.                
+                if (father.death > individual.birthdate) and (father.death < individual.birthdate - timedelta(days=366)):
+                    error_description = "Child was born more " +\
+                    "months after death of father"
+                    error_location = [fam.uid, individual.uid]
+                    report_error(error_type, error_description, error_location)
+                    return_flag = False
+
+
+                    # Case when mother dies before birth of child.
+                    # This is impossible.
+                    if mother.death > individual.birthdsate and mother.death < individual.birthdate - timedelta(days=366):
+                        error_descrip = "Child was born some months after death of mother"
+                        error_location = [fam.uid, individual.uid]
+                        report_error(error_type, error_descrip, error_location)
+                        return_flag = False
+    return return_flag
+
+
+            
+                
+                
+        
+        
+
+
+
+def large_age_differences(individuals, families):
+    """ US34 - Mother should be less than 50 years older than her
+    children and father should be less than 70 years older than his children -
+    ANOMALY
+    """
+    anom_type = "US34"
+    return_flag = True
+    DAYS_IN_50_YEARS = 31900
+    DAYS_IN_70_YEARS = 39200
+
+    # Locate all the children in a family.
+    #   (List of all families with non empty children)
+    fams_with_children = [x for x in families if x.children is not []]
+
+    for family in fams_with_children:
+
+        mother = next((x for x in individuals if x.uid == family.wife), None)
+        father = next((x for x in individuals if x.uid == family.husband), None)
+
+        children_uids = family.children
+
+        for child_uid in children_uids:
+            child = next((x for x in individuals if x.uid == child_uid), None)
+
+            if mother and child:  # This may be repetitive
+                if (child.birthdate - mother.birthdate) > \
+                        timedelta(DAYS_IN_50_YEARS):
+                    anom_description = "Mother is 50 years older than child"
+                    anom_location = [mother.uid, child.uid]
+                    report_anomaly(anom_type, anom_description, anom_location)
+                    return_flag = False
+
+            if father and child:  # This is situation or reoccurances
+                if (child.birthdate - father.birthdate) > \
+                        timedelta(days=DAYS_IN_70_YEARS):
+                    anom_description = "Father is 70 years older than child"
+                    anom_location = [father.uid, child.uid]
+                    report_anomaly(anom_type, anom_description, anom_location)
+                    return_flag = False
+
+    return return_flag
